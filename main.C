@@ -40,7 +40,7 @@ Main::Main(CkArgMsg *m)
 			FNameMsg *f = new (fname.length()+1) FNameMsg;
 			memcpy(f->fname, fname.c_str(), sizeof(char)*fname.length());
 			f->fname[fname.length()] = '\0';
-			freaders[i].GetFilename(f);
+			freaders[i].ReadFile(f);
 
 			if (fcount == nimages)
 				break;
@@ -100,7 +100,7 @@ void Main::RecvFile(FDataMsg *fd)
 		mainProxy.done();
 }
 
-void FileReader::GetFilename(FNameMsg *msg)
+void FileReader::ReadFile(FNameMsg *msg)
 {
 	CkPrintf("Chare %d received filename %s\n", CkMyPe(), msg->fname);
 	FILE *fp = fopen(msg->fname, "rb");

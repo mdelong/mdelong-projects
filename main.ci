@@ -19,7 +19,12 @@ mainmodule wp {
 
 	group FileReader {
 		entry FileReader();
-		entry void GetFilename(FNameMsg *msg);
+		entry void ReadFile(FNameMsg *msg);
+	};
+
+	group FileSearcher {
+		entry FileSearcher();
+		entry void GetFileData(FDataMsg *p);
 	};
 };
 

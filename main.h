@@ -30,7 +30,17 @@ class FileReader : public CBase_FileReader {
 
 public:
 	FileReader(){};
-	void GetFilename(FNameMsg *msg);
+	void ReadFile(FNameMsg *msg);
+};
+
+class FileSearcher : public CBase_FileSearcher {	
+
+private:
+	void searchFile();
+
+public:
+	FileSearcher(){};
+	void GetFileData(FDataMsg *p){};
 };
 
 class Main : public CBase_Main
