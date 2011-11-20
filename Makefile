@@ -1,27 +1,21 @@
 CHARMC=/opt/sharcnet/charm++/6.2.1/bin/charmc $(OPTS)
-
 CHARMHOME=/opt/sharcnet/charm++/6.2.1/
-OBJS = main.o
 INCLUDES = -I$(CHARMHOME)/include
 LIBS = -L$(CHARMHOME)/lib
+OBJS = main.o
 
+default: all
 all: wp
 
 wp: $(OBJS)
 	$(CHARMC) -language charm++ -o wp $(OBJS)
 
-wp.decl.h wp.def.h: main.ci
-	$(CHARMC)  main.ci $(INCLUDES) $(LIBS)
+main.o: main.C main.h wp.decl.h wp.def.h
+	$(CHARMC) -o main.o main.C
+
+wp.decl.h wp.h: main.ci
+	$(CHARMC) main.ci
 
 clean:
-	rm -f *.decl.h *.def.h conv-host *.o main charmrun charmrun.exe main.exe main.pdb main.ilk
-
-main.o: main.C wp.decl.h
-	$(CHARMC) -c main.C $(INCLUDES) $(LIBS)
-
-test: all
-	./charmrun ./wp +p4 10 $(TESTOPTS)
-
-bgtest: all
-	./charmrun ./wp +p4 10 +x2 +y2 +z2 $(TESTOPTS)
+	rm -f *.decl.h *.def.h conv-host *.o wp charmrun charmrun.exe wp.exe wp.pdb wp.ilk
 
