@@ -5,5 +5,14 @@ mainmodule wp {
 		entry Main(CkArgMsg *m);
 		entry void done();
 	};
+
+	message FNameMsg {
+		char fname[];
+	};
+
+	group FileReader {
+		entry FileReader();
+		entry void GetFilename(FNameMsg *msg);
+	};
 };
 
