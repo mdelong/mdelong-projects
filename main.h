@@ -67,11 +67,14 @@ class FileSearcher : public CBase_FileSearcher {
 private:
 	vector<Paralleldo> templates;
 	void createRotations(Paralleldo *p);
-	void searchFile(vector<string> &img);
+	bool findPattern(FileData *file, Paralleldo *pattern);
+	int getShift(string str);
+	bool match(vector<string> data, vector<string> pattern, 
+				int *x, int *y, Rotation rot);
 
 public:
 	FileSearcher(){};
-	void GetImageData(FDataMsg *img){};
+	void GetImageData(FDataMsg *img);
 	void GetTemplate(FDataMsg *t);
 };
 
@@ -84,6 +87,7 @@ class Main : public CBase_Main
 		int nfinished;
 		int nimages;
 		int ntemplates;
+		int searchNo;
 		int getFilenames(string &dirname, string &fext, vector<string> &fnames);
 
 	public:

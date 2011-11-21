@@ -70,6 +70,7 @@ Main::Main(CkArgMsg *m)
     CkPrintf("Running Hello on %d processors\n",CkNumPes());
     mainProxy = thisProxy;
 	nfinished = 0;
+	searchNo  = 0;
 	ntemplates = getFilenames(tdir, tempext, templates);
 	nimages    = getFilenames(idir, imageext, images);
 
@@ -115,7 +116,7 @@ void Main::checkIn()
 {
 	nfinished++;
 
-	if (nfinished == CkNumPes())
+	if (nfinished == nimages)
 	{
 		mainProxy.done();
 	}
@@ -147,15 +148,10 @@ int Main::getFilenames(string &dirname, string &fext, vector<string> &fnames)
 
 void Main::RecvFile(FDataMsg *fd)
 {
-	CkPrintf("Main Received file %s, %dx%d\n", fd->fname, fd->height, fd->width);
+//	CkPrintf("Main Received file %s, %dx%d\n", fd->fname, fd->height, fd->width);
 
-	nfinished++;
-	if (nfinished == ntemplates)
-		mainProxy.done();
-	else if (nfinished == 1)
-		fsearchers[0].GetTemplate(fd);
-	else
-		delete fd;
+	int index = searchNo % CkNumPes();
+	fsearchers[index].GetImageData(fd);
 }
 
 void FileReader::ReadFile(FNameMsg *msg)
@@ -188,11 +184,39 @@ void FileSearcher::GetTemplate(FDataMsg *t)
 		p.rotation0.push_back(str);
 	}
 
-	CkPrintf("Chare %d created paralleldo %s of size %dx%d, %dx%d\n", CkMyPe(), p.filename.c_str(), p.height, p.width,
-	p.rotation0.size(), p.rotation0[0].length());
-
 	createRotations(&p);
 	templates.push_back(p);
+}
+
+void FileSearcher::GetImageData(FDataMsg *img)
+{
+	FileData fd;
+
+	fd.height   = img->height;
+	fd.width    = img->width;
+	fd.filename = string(img->fname);
+	
+	{
+		string temp = img->fdata;
+		int len = temp.length();
+		delete img;
+
+		for (int i = 0; i < len; i+= fd.width)
+		{
+			fd.data.push_back(temp.substr(i, fd.width));
+		}
+	}
+
+	for (int i = 0; i < templates.size(); i++)
+	{
+		Paralleldo p = templates.at(i);
+		if (findPattern(&fd, &p) == true)
+		{
+			break;
+		}
+	}
+	
+	mainProxy.checkIn();
 }
 
 void FileSearcher::createRotations(Paralleldo *p)
@@ -221,6 +245,146 @@ void FileSearcher::createRotations(Paralleldo *p)
         p->rotation3.push_back(str);
     }
 }
+
+bool FileSearcher::findPattern(FileData *file, Paralleldo *pattern)
+{
+    int x = 0, y = 0;
+    
+    if (match(file->data, pattern->rotation0, &x, &y, Rotation_0) == true)
+    {
+        CkPrintf("$%s %s (%d,%d,0)\n", pattern->filename.c_str(), file->filename.c_str(), y, x);
+        return true;
+    }
+    else if (match(file->data, pattern->rotation1, &x, &y, Rotation_90) == true)
+    {
+        CkPrintf("$%s %s (%d,%d,90)\n", pattern->filename.c_str(), file->filename.c_str(), y, x);
+        return true;
+    }
+    else if (match(file->data, pattern->rotation2, &x, &y, Rotation_180) == true)
+    {
+        CkPrintf("$%s %s (%d,%d,180)\n", pattern->filename.c_str(), file->filename.c_str(), y, x);
+        return true;
+    }
+    else if (match(file->data, pattern->rotation3, &x, &y, Rotation_270) == true)
+    {
+        CkPrintf("$%s %s (%d,%d,270)\n", pattern->filename.c_str(), file->filename.c_str(), y, x);
+        return true;
+    }
+
+    return false;
+}
+
+bool FileSearcher::match(vector<string> data, vector<string> pattern, 
+               int *x, int *y, Rotation rot)
+{
+    int pheight = pattern.size();
+    int dheight = data.size();
+    int shift   = getShift(pattern[0]); 
+
+    bool match = false, matchFound = false;
+    size_t found;
+    std::string line, line2;
+    int matchCount = 0;
+
+    for (int i = 0; i <= (dheight-pheight); i++, matchFound==false)
+    {
+        line = data[i];
+
+        do {
+            if (matchFound == true)
+            {
+                break;
+            }
+
+            found = line.find(pattern[0]);
+            if (found != std::string::npos)
+            {
+                *x = found;
+                *y = i;
+                match = true;
+                for (int j = 1; j < pheight; j++)
+                {
+                    if ((j+i > dheight))
+                    {
+                        match = false;
+                        break;
+                    }
+
+                    line2 = data[j+i].substr(*x, pattern[j].length());
+                    if (line2 != pattern[j])
+                    {
+                        match = false;
+                        if (*x+shift >= line.length())
+                        {
+                            line = line.substr(*x+shift);
+                        }
+                        else
+                        {
+                            line = line.substr(line.length()-1);
+                        }
+                        break;
+                    }
+                }
+
+                if (match == true)
+                {
+                    matchFound = true;
+                    break;
+                }
+            }
+        } while (found != std::string::npos);
+    }
+
+    switch(rot)
+    {
+    case Rotation_0:
+    {
+        *x += 1;
+        *y += 1;
+        break;
+    }
+    case Rotation_90:
+    {
+        *x += pattern[0].length();
+        *y += 1;
+        break;
+    }
+    case Rotation_180:
+    {
+        *x += pattern[0].length();
+        *y += pheight;
+        break;
+    }
+    case Rotation_270:
+    {
+        *x += 1;
+        *y += pheight;
+        break;
+    }
+    default:
+        break;
+    }
+
+    return matchFound;
+}
+
+int FileSearcher::getShift(string str)
+{
+    int shift = str.length();
+    std::string temp = str.substr(1);
+    for (int i = str.length()-2; i >= 1; i++)
+    {
+        int p = temp.find_last_of(str.substr(0, i));
+        if (p != std::string::npos)
+        {
+            shift = p;
+            break;
+        }
+    }
+
+    return shift;
+}
+
 
 #include "wp.def.h"
 
