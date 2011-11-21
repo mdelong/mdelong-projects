@@ -7,6 +7,35 @@
 
 using namespace std;
 
+typedef enum {
+    Rotation_0 = 0,
+    Rotation_90,
+    Rotation_180,
+    Rotation_270
+} Rotation;
+
+//stores image data (height, width, filename, and contents)
+typedef struct fdata
+{
+    unsigned int height;
+    unsigned int width;
+    std::vector<std::string> data;//contents stored as vector of strings
+    std::string filename;
+} FileData;
+
+/* stores template/paralleldo data. All 4 rotations of the template are stored
+ * in this data structure. Rotations 0-3 correspond to 0-90-180-270 degrees, respectively.*/
+typedef struct p
+{
+    unsigned int height;
+    unsigned int width;
+    std::vector<std::string> rotation0;
+    std::vector<std::string> rotation1;
+    std::vector<std::string> rotation2;
+    std::vector<std::string> rotation3;
+    std::string filename;
+} Paralleldo;
+	
 class FNameMsg : public CMessage_FNameMsg {
 	public:
 		char *fname;
@@ -36,17 +65,22 @@ public:
 class FileSearcher : public CBase_FileSearcher {	
 
 private:
-	void searchFile();
+	vector<Paralleldo> templates;
+	void createRotations(Paralleldo *p);
+	void searchFile(vector<string> &img);
 
 public:
 	FileSearcher(){};
-	void GetFileData(FDataMsg *p){};
+	void GetImageData(FDataMsg *img){};
+	void GetTemplate(FDataMsg *t);
 };
 
 class Main : public CBase_Main
 {
 	private:
 		CProxy_FileReader freaders;
+		CProxy_FileSearcher fsearchers;
+		vector<FDataMsg*> tdata;
 		int nfinished;
 		int nimages;
 		int ntemplates;

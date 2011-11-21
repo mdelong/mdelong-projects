@@ -24,7 +24,8 @@ mainmodule wp {
 
 	group FileSearcher {
 		entry FileSearcher();
-		entry void GetFileData(FDataMsg *p);
+		entry void GetImageData(FDataMsg *img);
+		entry void GetTemplate(FDataMsg *t);
 	};
 };
 
