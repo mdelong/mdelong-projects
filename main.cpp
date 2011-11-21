@@ -11,115 +11,114 @@ CProxy_Main mainProxy;
 
 FDataMsg *readFile(const char* filename)
 {
-    FILE *fp = fopen(filename, "rb");
-        
-    if (fp != NULL)
-    {
-        int w = 0, h = 0;
-        fscanf(fp, "%d %d", &h, &w);
-        char *buf = new char[(h*w)+1];
-        int count = 0, c = 0;
-        
-        do {
-            c = fgetc(fp);
+	FILE *fp = fopen(filename, "rb");
+		
+	if (fp != NULL)
+	{
+		int w = 0, h = 0;
+		fscanf(fp, "%d %d", &h, &w);
+		char *buf = new char[(h*w)+1];
+		int count = 0, c = 0;
+		
+		do {
+			c = fgetc(fp);
 
-            if (c == '0' || c == '1')
-            {
-                buf[count++] = (char)c;
-            }
+			if (c == '0' || c == '1')
+			{
+				buf[count++] = (char)c;
+			}
 
-        } while (c != EOF);
+		} while (c != EOF);
 
-        fclose(fp);
-        buf[h*w] = '\0';
+		fclose(fp);
+		buf[h*w] = '\0';
 
-        const char *p = strrchr(filename, '/');
-        if (p)
-        {
-            p++;
-        }
-        else
-        {
-            p = filename;
-        }
+		const char *p = strrchr(filename, '/');
+		if (p)
+		{
+			p++;
+		}
+		else
+		{
+			p = filename;
+		}
 
-        FDataMsg *fdata = new (strlen(p)+1, (w*h)+1) FDataMsg(h, w);
-        memcpy(fdata->fname, p, sizeof(char)*strlen(p)+1);
-        memcpy(fdata->fdata, buf, sizeof(char)*((w*h)+1));
-        delete [] buf;
-        return fdata;
-    }
-    else
-    {
-        return NULL;
-    }
+		FDataMsg *fdata = new (strlen(p)+1, (w*h)+1) FDataMsg(h, w);
+		memcpy(fdata->fname, p, sizeof(char)*strlen(p)+1);
+		memcpy(fdata->fdata, buf, sizeof(char)*((w*h)+1));
+		delete [] buf;
+		return fdata;
+	}
+	else
+	{
+		return NULL;
+	}
 }
 
 Main::Main(CkArgMsg *m)
 {
-    string imageext = string(".img");
-    string tempext  = string(".txt");
+	string imageext = string(".img");
+	string tempext  = string(".txt");
 
-    vector<string> templates;
-    vector<string> images;
+	vector<string> templates;
+	vector<string> images;
 
-    string tdir = string(m->argv[1]);
-    string idir = string(m->argv[2]);
+	string tdir = string(m->argv[1]);
+	string idir = string(m->argv[2]);
 
-    delete m;
+	delete m;
     CkPrintf("Running Hello on %d processors\n",CkNumPes());
     mainProxy = thisProxy;
-    nfinished = 0;
-    searchNo  = 0;
-    ntemplates = getFilenames(tdir, tempext, templates);
-    nimages    = getFilenames(idir, imageext, images);
+	nfinished = 0;
+	ntemplates = getFilenames(tdir, tempext, templates);
+	nimages    = getFilenames(idir, imageext, images);
 
-    printf("%d templates, %d images\n", ntemplates, nimages);
-    
-    freaders   = CProxy_FileReader::ckNew();
-    fsearchers = CProxy_FileSearcher::ckNew();
+	printf("%d templates, %d images\n", ntemplates, nimages);
+	
+	freaders   = CProxy_FileReader::ckNew();
+	fsearchers = CProxy_FileSearcher::ckNew();
 
-    int w = 0, h = 0;
-    for (int i = 0; i < ntemplates; i++)
-    {
-        FDataMsg *t = readFile(templates[i].c_str());
-        fsearchers.GetTemplate(t);
-    }
+	int w = 0, h = 0;
+	for (int i = 0; i < ntemplates; i++)
+	{
+		FDataMsg *t = readFile(templates[i].c_str());
+		fsearchers.GetTemplate(t);
+	}
 
-    int fcount = 0;
-    while (fcount < nimages)
-    {
-        for (int i = 0; i < CkNumPes(); i++)
-        {
-            string fname = images[fcount++];
-            FNameMsg *f = new (fname.length()+1) FNameMsg;
-            memcpy(f->fname, fname.c_str(), sizeof(char)*fname.length());
-            f->fname[fname.length()] = '\0';
-            freaders[i].ReadFile(f);
+	int fcount = 0;
+	while (fcount < nimages)
+	{
+		for (int i = 0; i < CkNumPes(); i++)
+		{
+			string fname = images[fcount++];
+			FNameMsg *f = new (fname.length()+1) FNameMsg;
+			memcpy(f->fname, fname.c_str(), sizeof(char)*fname.length());
+			f->fname[fname.length()] = '\0';
+			freaders[i].ReadFile(f);
 
-            if (fcount == nimages)
-            {
-                break;
-            }
-        }
-    }
+			if (fcount == nimages)
+			{
+				break;
+			}
+		}
+	}
 }
 
 void Main::done(void)
 {
-    CkPrintf("All done\n");
-    CkPrintf("Program took %lf seconds to run\n", CkWallTimer()); 
-    CkExit();
+	CkPrintf("All done\n");
+	CkPrintf("Program took %lf seconds to run\n", CkWallTimer()); 
+  	CkExit();
 }
 
 void Main::checkIn()
 {
-    nfinished++;
+	nfinished++;
 
-    if (nfinished == nimages)
-    {
-        mainProxy.done();
-    }
+	if (nfinished == nimages)
+	{
+		mainProxy.done();
+	}
 };
 
 int Main::getFilenames(string &dirname, string &fext, vector<string> &fnames)
@@ -134,9 +133,9 @@ int Main::getFilenames(string &dirname, string &fext, vector<string> &fnames)
         {
             if (strstr(dir_entry->d_name, fext.c_str()) != NULL)
             {
-                string fname = dirname + "/" + string(dir_entry->d_name);
-                fnames.push_back(fname);
-                fcount++;
+				string fname = dirname + "/" + string(dir_entry->d_name);
+				fnames.push_back(fname);
+				fcount++;
             }
         }
         
@@ -148,80 +147,82 @@ int Main::getFilenames(string &dirname, string &fext, vector<string> &fnames)
 
 void Main::RecvFile(FDataMsg *fd)
 {
-//  CkPrintf("Main Received file %s, %dx%d\n", fd->fname, fd->height, fd->width);
+	CkPrintf("Main Received file %s, %dx%d\n", fd->fname, fd->height, fd->width);
 
-    int index = searchNo % CkNumPes();
-    fsearchers[index].GetImageData(fd);
+	fsearchers[0].GetImageData(fd);
 }
 
 void FileReader::ReadFile(FNameMsg *msg)
 {
-    //CkPrintf("Chare %d received filename %s\n", CkMyPe(), msg->fname);
-    FDataMsg *fdata = readFile(msg->fname);     
-    if (fdata != NULL)
-    {
-        mainProxy.RecvFile(fdata);  
-    }
+	//CkPrintf("Chare %d received filename %s\n", CkMyPe(), msg->fname);
+	FDataMsg *fdata = readFile(msg->fname);		
+	if (fdata != NULL)
+	{
+		mainProxy.RecvFile(fdata);	
+	}
 
-    delete msg;
+	delete msg;
 }
 
 void FileSearcher::GetTemplate(FDataMsg *t)
 {
-    string temp = string(t->fdata);
-    Paralleldo p;
-    p.height   = t->height;
-    p.width    = t->width;
-    p.filename = string(t->fname);
+	string temp = string(t->fdata);
+	Paralleldo p;
+	p.height   = t->height;
+	p.width    = t->width;
+	p.filename = string(t->fname);
 
-    delete t;
+	delete t;
 
-    int len = temp.length();
-    
-    for (int i = 0; i < len; i+=p.width)
-    {
-        string str = temp.substr(i, p.width);
-        p.rotation0.push_back(str);
-    }
+	int len = temp.length();
+	
+	for (int i = 0; i < len; i+=p.width)
+	{
+		string str = temp.substr(i, p.width);
+		p.rotation0.push_back(str);
+	}
 
-    createRotations(&p);
-    templates.push_back(p);
+	CkPrintf("Chare %d created paralleldo %s of size %dx%d, %dx%d\n", CkMyPe(), p.filename.c_str(), p.height, p.width,
+	p.rotation0.size(), p.rotation0[0].length());
+
+	createRotations(&p);
+	templates.push_back(p);
 }
 
 void FileSearcher::GetImageData(FDataMsg *img)
 {
-    FileData fd;
+	FileData fd;
 
-    fd.height   = img->height;
-    fd.width    = img->width;
-    fd.filename = string(img->fname);
-    
-    {
-        string temp = img->fdata;
-        int len = temp.length();
-        delete img;
+	fd.height   = img->height;
+	fd.width    = img->width;
+	fd.filename = string(img->fname);
+	
+	{
+		string temp = img->fdata;
+		int len = temp.length();
+		delete img;
 
-        for (int i = 0; i < len; i+= fd.width)
-        {
-            fd.data.push_back(temp.substr(i, fd.width));
-        }
-    }
+		for (int i = 0; i < len; i+= fd.width)
+		{
+			fd.data.push_back(temp.substr(i, fd.width));
+		}
+	}
 
-    for (int i = 0; i < templates.size(); i++)
-    {
-        Paralleldo p = templates.at(i);
-        if (findPattern(&fd, &p) == true)
-        {
-            break;
-        }
-    }
-    
-    mainProxy.checkIn();
+	for (int i = 0; i < templates.size(); i++)
+	{
+		Paralleldo p = templates.at(i);
+		if (findPattern(&fd, &p) == true)
+		{
+			break;
+		}
+	}
+	
+	mainProxy.checkIn();
 }
 
 void FileSearcher::createRotations(Paralleldo *p)
 {
-    for (int i = (p->height-1); i >= 0; i--)
+	for (int i = (p->height-1); i >= 0; i--)
     {
         string str(p->rotation0[i].rbegin(), p->rotation0[i].rend());
         p->rotation2.push_back(str);

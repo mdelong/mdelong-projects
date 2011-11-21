@@ -1,31 +1,31 @@
 mainmodule wp {
-	readonly CProxy_Main mainProxy;
+    readonly CProxy_Main mainProxy;
 
-	message FDataMsg {
-		char fname[];
-		char fdata[];
-	};
+    message FDataMsg {
+        char fname[];
+        char fdata[];
+    };
 
-	mainchare Main {
-		entry Main(CkArgMsg *m);
-		entry void done();
-		entry void checkIn();
-		entry void RecvFile(FDataMsg *fd);
-	};
+    mainchare Main {
+        entry Main(CkArgMsg *m);
+        entry void done();
+        entry void checkIn();
+        entry void RecvFile(FDataMsg *fd);
+    };
 
-	message FNameMsg {
-		char fname[];
-	};
+    message FNameMsg {
+        char fname[];
+    };
 
-	group FileReader {
-		entry FileReader();
-		entry void ReadFile(FNameMsg *msg);
-	};
+    group FileReader {
+        entry FileReader();
+        entry void ReadFile(FNameMsg *msg);
+    };
 
-	group FileSearcher {
-		entry FileSearcher();
-		entry void GetImageData(FDataMsg *img);
-		entry void GetTemplate(FDataMsg *t);
-	};
+    group FileSearcher {
+        entry FileSearcher();
+        entry void GetImageData(FDataMsg *img);
+        entry void GetTemplate(FDataMsg *t);
+    };
 };
 

@@ -35,67 +35,67 @@ typedef struct p
     std::vector<std::string> rotation3;
     std::string filename;
 } Paralleldo;
-	
+    
 class FNameMsg : public CMessage_FNameMsg {
-	public:
-		char *fname;
-		FNameMsg(){};
+    public:
+        char *fname;
+        FNameMsg(){};
 };
 
 class FDataMsg : public CMessage_FDataMsg {
-	public:
-		char *fname;
-		char *fdata;
-		int height;
-		int width;
-		FDataMsg(int h, int w)
-		{
-			height = h;
-			width  = w;
-		};
+    public:
+        char *fname;
+        char *fdata;
+        int height;
+        int width;
+        FDataMsg(int h, int w)
+        {
+            height = h;
+            width  = w;
+        };
 };
 
-class FileReader : public CBase_FileReader {	
+class FileReader : public CBase_FileReader {    
 
 public:
-	FileReader(){};
-	void ReadFile(FNameMsg *msg);
+    FileReader(){};
+    void ReadFile(FNameMsg *msg);
 };
 
-class FileSearcher : public CBase_FileSearcher {	
+class FileSearcher : public CBase_FileSearcher {    
 
 private:
-	vector<Paralleldo> templates;
-	void createRotations(Paralleldo *p);
-	bool findPattern(FileData *file, Paralleldo *pattern);
-	int getShift(string str);
-	bool match(vector<string> data, vector<string> pattern, 
-				int *x, int *y, Rotation rot);
+    vector<Paralleldo> templates;
+    void createRotations(Paralleldo *p);
+    bool findPattern(FileData *file, Paralleldo *pattern);
+    int getShift(string str);
+    bool match(vector<string> data, vector<string> pattern, 
+                int *x, int *y, Rotation rot);
 
 public:
-	FileSearcher(){};
-	void GetImageData(FDataMsg *img);
-	void GetTemplate(FDataMsg *t);
+    FileSearcher(){};
+    void GetImageData(FDataMsg *img);
+    void GetTemplate(FDataMsg *t);
 };
 
 class Main : public CBase_Main
 {
-	private:
-		CProxy_FileReader freaders;
-		CProxy_FileSearcher fsearchers;
-		vector<FDataMsg*> tdata;
-		int nfinished;
-		int nimages;
-		int ntemplates;
-		int searchNo;
-		int getFilenames(string &dirname, string &fext, vector<string> &fnames);
+    private:
+        CProxy_FileReader freaders;
+        CProxy_FileSearcher fsearchers;
+        vector<FDataMsg*> tdata;
+        int nfinished;
+        int nimages;
+        int ntemplates;
+        int searchNo;
+        int getFilenames(string &dirname, string &fext, vector<string> &fnames);
 
-	public:
-		Main(CkArgMsg *m);
-		Main(CkMigrateMessage *m);
-		void done();
-		void checkIn();
-		void RecvFile(FDataMsg *fd);
+    public:
+        Main(CkArgMsg *m);
+        Main(CkMigrateMessage *m);
+        void done();
+        void checkIn();
+        void RecvFile(FDataMsg *fd);
 };
 
 #endif
