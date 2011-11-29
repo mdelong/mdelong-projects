@@ -100,23 +100,41 @@ Main::Main(CkArgMsg *m)
     vector<string> templates;
     vector<string> images;
 
-    //todo - potential bug - what if arguments are not supplied?
+    if (m->argc != 3)
+    {
+        CkPrintf("Error: incorrect command line arguments were supplied.\n");
+        CkPrintf("Usage: ./wp <template directory> <image directory>\n");
+        CkExit();
+    }
+
     string tdir = string(m->argv[1]);
     string idir = string(m->argv[2]);
     delete m;
-
-    CkPrintf("Running Where's Paralleldo on %d processors\n",CkNumPes());
-    mainProxy = thisProxy;
-    nfinished = 0;
-    searchNo  = 0;
 
     //scan directories first for filenames
     ntemplates = getFilenames(tdir, tempext, templates);
     nimages    = getFilenames(idir, imageext, images);
 
-    //todo - should print error message and exit if no files found in either folder
+    if (ntemplates == 0)
+    {
+        CkPrintf("Error: no template files found in input directory.\n");
+        CkPrintf("Check the pathname you supplied to ensure it is valid, or check the directory contents.\n");
+        CkExit();
+    }
+    
+    if (nimages == 0)
+    {
+        CkPrintf("Error: no image files found in input directory.\n");
+        CkPrintf("Check the pathname you supplied to ensure it is valid, or check the directory contents.\n");
+        CkExit();
+    }
+    
+    CkPrintf("Running Where's Paralleldo on %d processors\n",CkNumPes());
+    mainProxy = thisProxy;
+    nfinished = 0;
+    searchNo  = 0;
 
-    printf("%d templates, %d images\n", ntemplates, nimages);
+    CkPrintf("%d templates, %d images\n", ntemplates, nimages);
  
     //create chare groups (1 per processor) for readers and searchers
     freaders   = CProxy_FileReader::ckNew(nimages);
