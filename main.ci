@@ -16,7 +16,7 @@ mainmodule main {
         char fname[];
     };
 
-   	group FileReader {
+   	array[1D] FileReader {
         entry FileReader();
         entry void ReadFile(FNameMsg *msg);
     };

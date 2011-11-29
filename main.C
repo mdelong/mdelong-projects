@@ -102,7 +102,7 @@ Main::Main(CkArgMsg *m)
     string idir = string(m->argv[2]);
     delete m;
 
-    CkPrintf("Running Hello on %d processors\n",CkNumPes());
+    CkPrintf("Running Where's Paralleldo on %d processors\n",CkNumPes());
     mainProxy = thisProxy;
     nfinished = 0;
     searchNo  = 0;
@@ -116,7 +116,7 @@ Main::Main(CkArgMsg *m)
     printf("%d templates, %d images\n", ntemplates, nimages);
  
 	//create chare groups (1 per processor) for readers and searchers
-    freaders   = CProxy_FileReader::ckNew();
+    freaders   = CProxy_FileReader::ckNew(nimages);
     fsearchers = CProxy_FileSearcher::ckNew();
 
 	//read templates serially, broadcast each one to all search chares
@@ -136,7 +136,7 @@ Main::Main(CkArgMsg *m)
         f->fname[fname.length()] = '\0';
 
 		//we have limited file readers; assign work in a circular fashion
-		int index = i % CkNumPes();
+		int index = i;// % CkNumPes();
         freaders[index].ReadFile(f);
     }
 }
