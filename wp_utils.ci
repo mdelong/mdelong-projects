@@ -1,0 +1,23 @@
+module wp_utils {
+
+	message FDataMsg {
+        char fname[];
+        char fdata[];
+    };
+    
+	message FNameMsg {
+        char fname[];
+    };
+
+   	array[1D] FileReader {
+        entry FileReader();
+        entry void ReadFile(FNameMsg *msg);
+    };
+
+    group FileSearcher {
+        entry FileSearcher();
+        entry void GetImageData(FDataMsg *img);
+        entry void GetTemplate(FDataMsg *t);
+    };
+};
+
