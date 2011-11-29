@@ -30,7 +30,7 @@ class Main : public CBase_Main
         int ntemplates;
         int searchNo;
         double startTime;
-		int getFilenames(string &dirname, string &fext, vector<string> &fnames);
+        int getFilenames(string &dirname, string &fext, vector<string> &fnames);
         void done();
 
     public:

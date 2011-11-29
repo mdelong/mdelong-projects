@@ -1,6 +1,7 @@
 mainmodule main {
+
     readonly CProxy_Main mainProxy;
-	extern module wp_utils;
+    extern module wp_utils;
 
     mainchare Main {
         entry Main(CkArgMsg *m);

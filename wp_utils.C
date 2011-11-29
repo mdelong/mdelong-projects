@@ -29,8 +29,8 @@ void FileReader::ReadFile(FNameMsg *msg)
     //CkPrintf("Chare %d received filename %s\n", CkMyPe(), msg->fname);
     FDataMsg *fdata = readFile(msg->fname);     
     
-	//pass file contents back to main
-	if (fdata != NULL)
+    //pass file contents back to main
+    if (fdata != NULL)
     {
         mainProxy.RecvFile(fdata);  
     }
@@ -59,7 +59,7 @@ void FileSearcher::GetTemplate(FDataMsg *t)
         p.rotation0.push_back(str);
     }
 
-	//need to check for 90, 180, and 270 degree rotations as well
+    //need to check for 90, 180, and 270 degree rotations as well
     createRotations(&p);
     templates.push_back(p);
 }
@@ -78,7 +78,7 @@ void FileSearcher::GetImageData(FDataMsg *img)
     fd.width    = img->width;
     fd.filename = string(img->fname);
     
-	//this section of code is performed in a block because files can be quite large.
+    //this section of code is performed in a block because files can be quite large.
     // Ensures that stack memory for string object "temp" is freed as soon as possible
     {
         string temp = string(img->fdata);
@@ -91,7 +91,7 @@ void FileSearcher::GetImageData(FDataMsg *img)
         }
     }
 
-	//search for templates in this image
+    //search for templates in this image
     for (int i = 0; i < templates.size(); i++)
     {
         Paralleldo p = templates.at(i);
@@ -101,7 +101,7 @@ void FileSearcher::GetImageData(FDataMsg *img)
         }
     }
     
-	//notify mainchare that search has finished
+    //notify mainchare that search has finished
     mainProxy.checkIn();
 }
 
@@ -110,14 +110,14 @@ void FileSearcher::GetImageData(FDataMsg *img)
  */
 void FileSearcher::createRotations(Paralleldo *p)
 {
-	//create 180 degree rotation
+    //create 180 degree rotation
     for (int i = (p->height-1); i >= 0; i--)
     {
         string str(p->rotation0[i].rbegin(), p->rotation0[i].rend());
         p->rotation2.push_back(str);
     }
 
-	//create 90 degree rotation
+    //create 90 degree rotation
     char* rot90 = new char[p->height+1];
     for (int i = 0; i < p->width; i++)
     {
@@ -130,7 +130,7 @@ void FileSearcher::createRotations(Paralleldo *p)
     }
     delete [] rot90;
 
-	//create 270 degree rotation
+    //create 270 degree rotation
     for (int i = (p->width-1); i >= 0; i--)
     {
         string str(p->rotation1[i].rbegin(), p->rotation1[i].rend());
@@ -198,13 +198,13 @@ bool FileSearcher::match(vector<string> data, vector<string> pattern,
 
             found = line.find(pattern[0]);
 
-			//check if there was a match for first line of template; if not, skip to the next line in image
+            //check if there was a match for first line of template; if not, skip to the next line in image
             if (found != std::string::npos)
             {
                 *x = found;
                 *y = i;
 
-				//signals temporary match; remaining lines of template still must match
+                //signals temporary match; remaining lines of template still must match
                 match = true;
                 for (int j = 1; j < pheight; j++)
                 {
@@ -239,7 +239,7 @@ bool FileSearcher::match(vector<string> data, vector<string> pattern,
         } while (found != std::string::npos);
     }
 
-	//x and y locations represent top left corner of the (unrotated image)
+    //x and y locations represent top left corner of the (unrotated image)
     //Due to this requirement, x and y indices will need to be updated.
     switch(rot)
     {

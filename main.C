@@ -45,7 +45,7 @@ FDataMsg *readFile(const char* filename)
         
     if (fp != NULL)
     {
-		//read height and width, allocate buffer
+        //read height and width, allocate buffer
         int w = 0, h = 0;
         fscanf(fp, "%d %d", &h, &w);
         char *buf = new char[(h*w)+1];
@@ -64,8 +64,8 @@ FDataMsg *readFile(const char* filename)
         fclose(fp);
         buf[h*w] = '\0';
 
-		/*we don't want the complete path to be stored with the file data,
-		just the file name*/
+        /*we don't want the complete path to be stored with the file data,
+        just the file name*/
         const char *p = strrchr(filename, '/');
         if (p)
         {
@@ -76,7 +76,7 @@ FDataMsg *readFile(const char* filename)
             p = filename;
         }
 
-		//pack file data into message format
+        //pack file data into message format
         FDataMsg *fdata = new (strlen(p)+1, (w*h)+1) FDataMsg(h, w);
         memcpy(fdata->fname, p, sizeof(char)*strlen(p)+1);
         memcpy(fdata->fdata, buf, sizeof(char)*((w*h)+1));
@@ -92,7 +92,7 @@ FDataMsg *readFile(const char* filename)
 /*Constructor for Main chare, entry point of the application*/
 Main::Main(CkArgMsg *m)
 {
-	startTime = CkWallTimer();
+    startTime = CkWallTimer();
 
     string imageext = string(".img");
     string tempext  = string(".txt");
@@ -100,7 +100,7 @@ Main::Main(CkArgMsg *m)
     vector<string> templates;
     vector<string> images;
 
-	//todo - potential bug - what if arguments are not supplied?
+    //todo - potential bug - what if arguments are not supplied?
     string tdir = string(m->argv[1]);
     string idir = string(m->argv[2]);
     delete m;
@@ -110,19 +110,19 @@ Main::Main(CkArgMsg *m)
     nfinished = 0;
     searchNo  = 0;
 
-	//scan directories first for filenames
+    //scan directories first for filenames
     ntemplates = getFilenames(tdir, tempext, templates);
     nimages    = getFilenames(idir, imageext, images);
 
-	//todo - should print error message and exit if no files found in either folder
+    //todo - should print error message and exit if no files found in either folder
 
     printf("%d templates, %d images\n", ntemplates, nimages);
  
-	//create chare groups (1 per processor) for readers and searchers
+    //create chare groups (1 per processor) for readers and searchers
     freaders   = CProxy_FileReader::ckNew(nimages);
     fsearchers = CProxy_FileSearcher::ckNew();
 
-	//read templates serially, broadcast each one to all search chares
+    //read templates serially, broadcast each one to all search chares
     int w = 0, h = 0;
     for (int i = 0; i < ntemplates; i++)
     {
@@ -130,16 +130,16 @@ Main::Main(CkArgMsg *m)
         fsearchers.GetTemplate(t);
     }
 
-	//Main image file I/O loop - pass each file off to a reader chare
+    //Main image file I/O loop - pass each file off to a reader chare
     for (int i = 0; i < nimages; i++)
     {
-    	string fname = images[i];
+        string fname = images[i];
         FNameMsg *f = new (fname.length()+1) FNameMsg;
         memcpy(f->fname, fname.c_str(), sizeof(char)*fname.length());
         f->fname[fname.length()] = '\0';
 
-		//we have limited file readers; assign work in a circular fashion
-		int index = i;// % CkNumPes();
+        //we have limited file readers; assign work in a circular fashion
+        int index = i;// % CkNumPes();
         freaders[index].ReadFile(f);
     }
 }

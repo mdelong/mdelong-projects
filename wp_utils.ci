@@ -1,15 +1,15 @@
 module wp_utils {
 
-	message FDataMsg {
+    message FDataMsg {
         char fname[];
         char fdata[];
     };
     
-	message FNameMsg {
+    message FNameMsg {
         char fname[];
     };
 
-   	array[1D] FileReader {
+    array[1D] FileReader {
         entry FileReader();
         entry void ReadFile(FNameMsg *msg);
     };
