@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <stdio.h>
-#include "wp.decl.h"
+#include "main.decl.h"
 #include "main.h"
 
 using namespace std;
@@ -57,6 +57,8 @@ FDataMsg *readFile(const char* filename)
 
 Main::Main(CkArgMsg *m)
 {
+	startTime = CkWallTimer();
+
     string imageext = string(".img");
     string tempext  = string(".txt");
 
@@ -75,7 +77,7 @@ Main::Main(CkArgMsg *m)
     nimages    = getFilenames(idir, imageext, images);
 
     printf("%d templates, %d images\n", ntemplates, nimages);
-    
+ 
     freaders   = CProxy_FileReader::ckNew();
     fsearchers = CProxy_FileSearcher::ckNew();
 
@@ -108,7 +110,7 @@ Main::Main(CkArgMsg *m)
 void Main::done(void)
 {
     CkPrintf("All done\n");
-    CkPrintf("Program took %lf seconds to run\n", CkWallTimer()); 
+    CkPrintf("Program took %lf seconds to run\n", (CkWallTimer()-startTime)); 
     CkExit();
 }
 
@@ -150,7 +152,7 @@ void Main::RecvFile(FDataMsg *fd)
 {
 //  CkPrintf("Main Received file %s, %dx%d\n", fd->fname, fd->height, fd->width);
 
-    int index = searchNo % CkNumPes();
+    int index = (searchNo++) % CkNumPes();
     fsearchers[index].GetImageData(fd);
 }
 
@@ -386,5 +388,5 @@ int FileSearcher::getShift(string str)
 }
 
 
-#include "wp.def.h"
+#include "main.def.h"
 

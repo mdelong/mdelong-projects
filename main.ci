@@ -1,4 +1,4 @@
-mainmodule wp {
+mainmodule main {
     readonly CProxy_Main mainProxy;
 
     message FDataMsg {
@@ -17,7 +17,7 @@ mainmodule wp {
         char fname[];
     };
 
-    group FileReader {
+   	group FileReader {
         entry FileReader();
         entry void ReadFile(FNameMsg *msg);
     };

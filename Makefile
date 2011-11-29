@@ -10,10 +10,10 @@ all: wp
 wp: $(OBJS)
 	$(CHARMC) -language charm++ -o wp $(OBJS) -O2
 
-main.o: main.C main.h wp.decl.h wp.def.h
+main.o: main.C main.h main.decl.h main.def.h
 	$(CHARMC) -o main.o main.C -O2
 
-wp.decl.h wp.h: main.ci
+main.decl.h main.h: main.ci
 	$(CHARMC) main.ci
 
 clean:

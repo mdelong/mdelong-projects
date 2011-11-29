@@ -59,6 +59,7 @@ class FileReader : public CBase_FileReader {
 
 public:
     FileReader(){};
+    FileReader(CkMigrateMessage *m){};
     void ReadFile(FNameMsg *msg);
 };
 
@@ -88,7 +89,8 @@ class Main : public CBase_Main
         int nimages;
         int ntemplates;
         int searchNo;
-        int getFilenames(string &dirname, string &fext, vector<string> &fnames);
+        double startTime;
+		int getFilenames(string &dirname, string &fext, vector<string> &fnames);
 
     public:
         Main(CkArgMsg *m);
