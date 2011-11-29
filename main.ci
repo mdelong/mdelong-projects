@@ -8,7 +8,6 @@ mainmodule main {
 
     mainchare Main {
         entry Main(CkArgMsg *m);
-        entry void done();
         entry void checkIn();
         entry void RecvFile(FDataMsg *fd);
     };

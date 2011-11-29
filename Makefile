@@ -8,10 +8,10 @@ default: all
 all: wp
 
 wp: $(OBJS)
-	$(CHARMC) -language charm++ -o wp $(OBJS) -O2
+	$(CHARMC) -language charm++ -o wp $(OBJS)
 
 main.o: main.C main.h main.decl.h main.def.h
-	$(CHARMC) -o main.o main.C -O2
+	$(CHARMC) -o main.o main.C
 
 main.decl.h main.h: main.ci
 	$(CHARMC) main.ci
