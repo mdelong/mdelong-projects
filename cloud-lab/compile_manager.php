@@ -32,7 +32,7 @@
         // This needs to be done for both security and convenience reasons
         private function create_compile_dir() {
             $source_dir = "~/" . $this->username . "/" . $this->project_name;
-            mkdir(($source_dir, 0, true));
+            mkdir($source_dir, 0, true);
             $files = $this->fs->get_source_files($this->username, $this->project_name);
             
             foreach ($files as $filename => $file_contents) {

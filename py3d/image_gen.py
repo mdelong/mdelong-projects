@@ -1,7 +1,7 @@
 #
 #  image_gen.py
 #  
-#  Created by Michael Delong, #0636022, for CIS*4800 Assignment 3
+#  Created by Michael Delong, #0636022, for CIS*4800 Assignment 4
 #  This program generates a solid in 3D image space, and then projects it onto a 2D image buffer, 
 #  which is saved as a JPEG file.
 #
@@ -12,84 +12,145 @@ from image_utils import *
 class ImageGen(object):
 
     """ Constructor for class """
-    def __init__(self, size=500, pix_size=2): #default IMG_SIZE=500, PIX_SIZE=4
-        self.M = size
-        self.PIX_SIZE = pix_size
-        self.image_buffer = Image.new("RGB", (self.M * self.PIX_SIZE, self.M * self.PIX_SIZE), BLACK)
-
-    """ Fills a point in the image buffer with the specified color"""
-    def fillPoint(self, x, y, color):
-        for i in range(self.PIX_SIZE):
-            for j in range (self.PIX_SIZE):
-                try:
-                    self.image_buffer.putpixel((x+i, y+j), color)
-                except IndexError:
-                    continue
-            
-    """ Draw edges between connected vertices in the image buffer """
-    def rasterizeEdges(self, model):
+    def __init__(self, name, size=500): #default IMG_SIZE=500
+        self.M       = size
+        self.name    = name
+        self.ZBuffer = [[1.0 for i in range(self.M)] for j in range(self.M)]
+        self.image_buffer = Image.new("RGB", (self.M, self.M), BLACK)
     
-        for P in model.polygons:
-            print P.visible
-            if P.visible == True:
-                for edge in P.edges:
-                    if edge[1] == True:
-                        v1 = self.roundPoint(P.vertices[edge[0][0]], "xy")
-                        v2 = self.roundPoint(P.vertices[edge[0][1]], "xy")
-                        x1, x2, y1, y2 = v1[0], v2[0], v1[1], v2[1]
-                        
-                        if (abs(x2 - x1) < abs(y2 - y1)):
-                            m = float(x2 - x1)/abs(float(y2 - y1))
-                            x, inc = x1, 1
-                            if (y1 > y2):   inc = -1
-                            for y in range(y1, y2, inc):
-                                self.fillPoint(int(x), int(y), RED)
-                                x += m
-                        else:
-                            try:
-                                y, inc = y1, 1
-                                m = float(y2 - y1)/abs(float(x2 - x1))
-                                if (x1 > x2):   inc = -1
-                                for x in range(x1, x2, inc):
-                                    self.fillPoint(int(x), int(y), P.color)
-                                    y += m
+    """ """
+    def shading(self, x, y, color):
+        try:
+            self.image_buffer.putpixel((int(x), int(y)), color)
+        except IndexError:
+            return
+    
+    """ """
+    def zBuffer(self, P, rasterizePolygons):
+        segment_dict = self.rasterizeEdges(P, not rasterizePolygons)
+        
+        if rasterizePolygons == True:
+            segment_list = [s for s in segment_dict.iteritems()]
 
-                            except ZeroDivisionError: # edge is a horizontal line
-                                for x in range (x1, x2, inc):
-                                    self.fillPoint(int(x), v1[1], RED) # edges are drawn in red"""
+            segment_list.sort(key=lambda s: s[0])        
+            for i in range(len(segment_list)):
+                y, startx, endx = segment_list[i][0], segment_list[i][1][0], segment_list[i][1][1]
+                
+                try:
+                    z, m = startx[1], float(endx[1] - startx[1])/float(endx[0] - startx[0])
+                except ZeroDivisionError:
+                    m, z = 0.0, startx[1]
+                
+                else:
+                    if (startx[0] == endx[0]):
+                        x = startx[0]
+                        if z < self.ZBuffer[x][y]:
+                            self.shading(x, y, P.color)
+                            self.ZBuffer[x][y] = z
+                    else:
+                        for x in range(startx[0], endx[0]):
+                            if z < self.ZBuffer[x][y]:
+                                self.shading(x, y, P.color)
+                                self.ZBuffer[x][y] = z
+                            z += m
+
+    """ """
+    def rasterizeEdges(self, P, showEdges):
+        rasterized_points = {}
+        for edge in P.edges:
+            if edge[1] == True:
+                (v1, v2) = (self.roundPoint(P.vertices[edge[0][0]]), self.roundPoint(P.vertices[edge[0][1]]))
+                x1, x2, y1, y2, z1, z2 = v1[0], v2[0], v1[1], v2[1], v1[2], v2[2]
+                
+                if (abs(x2 - x1) < abs(y2 - y1)): # go row-by-row
+                    if (y1 > y2):
+                        starty, endy, x, z = v2, v1, x2, z2
+                    else:
+                        starty, endy, x, z = v1, v2, x1, z1
+                    
+                    m    = float(endy[0] - starty[0])/abs(float(endy[1] - starty[1]))
+                    zinc = float(endy[2] - starty[2])/abs(float(endy[1] - starty[1]))
+
+                    for y in range(starty[1], endy[1]):
+                        if showEdges == True:
+                            self.shading(x, y, P.color)
+                        else:
+                            p = rasterized_points.get(y)
+                            if p == None:
+                                rasterized_points[y] = [(int(x), z), (int(x), z)]
+                            else:
+                                if (x < p[0][0]):  p[0] = (int(x), z)
+                                if (x > p[1][0]):  p[1] = (int(x), z)
+                                rasterized_points[y] = p
                         
-                        self.fillPoint(v1[0], v1[1], YELLOW) # vertices are drawn in yellow
-                        self.fillPoint(v2[0], v2[1], YELLOW)
+                        x += m
+                        z += zinc
+                
+                else: #column-by-column
+                    try:
+                        if (x1 > x2):
+                            startx, endx, y, z = v2, v1, y2, z2
+                        else:
+                            startx, endx, y, z = v1, v2, y1, z1
+
+                        m    = float(endx[1] - startx[1])/abs(float(endx[0] - startx[0]))
+                        zinc = float(endx[2] - startx[2])/abs(float(endx[0] - startx[0]))
+                    
+                        for x in range(startx[0], endx[0]):
+                            if showEdges == True:
+                                self.shading(x, y, P.color)
+                            else:
+                                p = rasterized_points.get(int(y))
+                                if p == None:
+                                    rasterized_points[int(y)] = [(int(x), z), (int(x), z)]
+                                else:
+                                    if (x < p[0][0]):  p[0] = (int(x), z)
+                                    if (x > p[1][0]):  p[1] = (int(x), z)
+                                    rasterized_points[int(y)] = p
+                            
+                            y += m
+                            z += zinc
+                    
+                    except ZeroDivisionError: # edge is a horizontal line
+                        if showEdges == True:
+                            for x in range(startx[0], endx[0]): self.shading(x, y, P.color)
+                        else:
+                            p = rasterized_points.get(y)
+                            if p == None:
+                                rasterized_points[y] = [(startx[0], startx[2]), (endx[0], endx[2])]
+                            else:
+                                if (startx[0] < p[0][0]):  p[0] = (startx[0], startx[2])
+                                if (endx[0] > p[1][0]):    p[1] = (endx[0], endx[2])
+                                rasterized_points[y] = p
+
+        return rasterized_points
     
     """ Translates a vertex from the (x, y, z) coordinate space to its x,y coordinates in the image buffer """
     def roundPoint(self, coords, plane="xy"):
-        
         if plane == "xy":
             xratio = (coords[0] + 1.0)/2.0
             yratio = (-coords[1] + 1.0)/2.0
-            x = int(self.M * xratio * self.PIX_SIZE)
-            y = int(self.M * yratio * self.PIX_SIZE)
-            return (x, y)
+            x = int(self.M * xratio)
+            y = int(self.M * yratio)
+            return (x, y, coords[2])
             
         elif plane == "xz":
             xratio = (coords[0] + 1.0)/2.0
             zratio = (coords[2] + 1.0)/2.0
-            x = int(self.M * xratio * self.PIX_SIZE)
-            z = int(self.M * zratio * self.PIX_SIZE)
-            return (x, z)
+            x = int(self.M * xratio)
+            z = int(self.M * zratio)
+            return (x, coords[1], z)
             
         elif plane == "yz":
             yratio = (coords[1] + 1.0)/2.0
             zratio = (coords[2] + 1.0)/2.0
-            y = int(self.M * yratio * self.PIX_SIZE)
-            z = int(self.M * zratio * self.PIX_SIZE)
-            return (y, z)
+            y = int(self.M * yratio)
+            z = int(self.M * zratio)
+            return (coords[0], y, z)
 
         return (0, 0)
-
-    def rasterizeModel(self, model):
-        self.rasterizeEdges(model)
-       
-    def saveImage(self, filename):
-        self.image_buffer.save(filename + ".jpg", "JPEG")
+    
+    """ """
+    def saveImage(self):
+        self.image_buffer.save(self.name + ".jpg", "JPEG")
 

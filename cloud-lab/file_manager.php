@@ -1,17 +1,4 @@
 <?php
-
-    $DEFAULT_HTML = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n<html>\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n<meta name=\"viewport\" id=\"viewport\" content=\"height=600, width=1024, user-scalable=no\" />\n<title>BlackBerry Default App</title>\n<link href=\"style.css\" rel=\"stylesheet\" type=\"text/css\">\n<script type=\"text/javascript\" src=\"script.js\"></script>\n</head>\n\n<body>\n<h2>Hello World!</h2>\n</body>\n</html>\n";
-    
-    $DEFAULT_CSS = "@CHARSET \"ISO-8859-1\";\n\nbody {\n/* Body styles go here */\n}\n\n#header {\n/* Header styles go here */\n}\n";
-    
-    $DEFAULT_JS  = "\nfunction foo() {\n    return;\n}\n";
-    
-    $DEFAULT_C = "\n#include <stdio.h>\n#include \"main.h\"\nint main(void) {\n    printf(\"Hello World\n\");    return 0;\n}\n";
-    
-    $DEFAULT_CPP = "\n#include <iostream>\n#include \"main.h\"\n\nint main (void) {\n    std::cout << \"Hello world\" << endl;\n    return 0;\n}\n";
-    
-    $DEFAULT_H = "\n#ifndef _main_h\n#define _main_h\n\n#endif\n";
-    
     
     $SDK_HOME = './aws_php_sdk/';
     error_reporting(-1); // Enable full-blown error reporting.
@@ -21,7 +8,8 @@
     
     function startsWith($haystack, $needle) {
         $length = strlen($needle);
-        return (substr($haystack, 0, $length) === $needle);
+        $s = substr($haystack, 0, $length);        
+        return (substr($haystack, 0, $length) == $needle);
     }
     
     class FileManager
@@ -29,31 +17,17 @@
         private $s3, $project, $username;
         
         function __construct($user, $project_name) {
-            $this->s3      = new AmazonS3();
-            $this->project = strlower($name);
-            $this->user    = $username;
+            $this->s3       = new AmazonS3();
+            $this->project  = strtolower($project_name);
+            $this->username = $user;
                         
             if (!($this->has_edited())) {
+                echo "has edited = false" . PHP_EOL;
                 $this->copy_from_default();
             }
-        }
-
-        // for listing files in IDE tab
-        function get_project_files() {
-            $files   = $this->s3->get_object_list($this->project);
-            $results = array();
-            
-            foreach ($files as $file) {
-                echo $file . " " . $s3->get_object_url($this->project, $file, '5 minutes') . PHP_EOL;
-                
-                if (startsWith($file, $this->username)) {
-                    $file_contents = $this->get_file($this->project, $file);
-                    if ($file_contents) {
-                        $results[$file] = $file_contents; //key-value pairing of filename and contents
-                    }
-                }
+            else {
+                echo "has edited = true" . PHP_EOL;
             }
-            return $results;
         }
         
         private function get_project_filenames($user) {
@@ -61,13 +35,9 @@
             $results = array();
             
             foreach ($files as $file) {
-                echo $file . " " . $s3->get_object_url($this->project, $file, '5 minutes') . PHP_EOL;
-                
-                if (startsWith($file, $user)) {
-                    $file_contents = $this->get_file($this->project, $file);
-                    if ($file_contents) {
-                        $results[] = $file;
-                    }
+                echo $file . PHP_EOL;
+                if (startsWith($file, $user . "/")) {
+                    $results[] = $file;
                 }
             }
             return $results;
@@ -75,28 +45,15 @@
         
         // check if this is the first user login (user should have created his/her own files)
         private function has_edited() {
-            return (sizeof($this->get_project_files($this->username)) != 0);
+            return (sizeof($this->get_project_filenames($this->username)) != 0);
         }
         
         private function copy_from_default() {
-            
             $files = $this->get_project_filenames("default");
-                
-            foreach ($files as $file) {
-                $response = $this->s3->copy_object(
-                                                   array( // Source
-                                                         'bucket'   => $this->project,
-                                                         'filename' => $file
-                                                         ),
-                                                   array( // Destination
-                                                         'bucket'   => $this->project,
-                                                         'filename' => $this->username . "/" . $file
-                                                         )
-                                                   );                
+            echo $this->username . PHP_EOL;
+            foreach ($files as $file) {                
+                $this->save_file($this->username . "/" . substr($file, 8), $this->get_file($file));
             }
-
-            // Success?
-            var_dump($response->isOK());
         }
         
         // retrieve file data
@@ -105,14 +62,7 @@
             $responseData = @file_get_contents($url);
 
             if ($responseData) {
-                $responseArray = json_decode($responseData, true);
-                if ($is_array($responseArray)) {
-                    return $responseArray;
-                }
-
-                else {
-                    return false;
-                }
+                return $responseData;
             }
 
             else {
@@ -128,6 +78,7 @@
             }
             
             else {
+                $DEFAULT_HTML = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n<html>\n    <head>\n        <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n        <meta name=\"viewport\" id=\"viewport\" content=\"height=600, width=1024, user-scalable=no\" />\n\n        <title>BlackBerry Default App</title>\n        <link href=\"style.css\" rel=\"stylesheet\" type=\"text/css\">\n        <script type=\"text/javascript\" src=\"script.js\"></script>\n    </head>\n\n    <body>\n        <h2>Hello World!</h2>\n    </body>\n</html>\n";
                 $this->save_file($this->username . "/" . $name . ".html", $DEFAULT_HTML);
             }            
         }
@@ -140,6 +91,7 @@
             }
             
             else {
+                $DEFAULT_JS  = "\nfunction foo() {\n    return;\n}\n";
                 $this->save_file($this->username . "/" . $name . ".js", $DEFAULT_JS);
             }            
         }
@@ -152,6 +104,7 @@
             }
             
             else {
+                $DEFAULT_CSS = "@CHARSET \"ISO-8859-1\";\n\nbody {\n/* Body styles go here */\n}\n\n#header {\n/* Header styles go here */\n}\n";
                 $this->save_file($this->username . "/" . $name . ".css",  $DEFAULT_CSS);
             }            
         }
@@ -164,7 +117,21 @@
             }
             
             else {
+                $DEFAULT_H = "\n#ifndef _main_h\n#define _main_h\n\n#endif\n";
                 $this->save_file($this->username . "/" . $name . ".h", $DEFAULT_H);
+            }            
+        }
+        
+        function create_hpp_source($name) {
+            $exists = $this->s3->if_bucket_exists(strtolower($this->project));
+            if (!$exists) {
+                echo "Error: could not find bucket\n";
+                return false;
+            }
+            
+            else {
+                $DEFAULT_HPP = "\n#ifndef _main_hpp\n#define _main_hpp\n\n#endif\n";
+                $this->save_file($this->username . "/" . $name . ".hpp", $DEFAULT_HPP);
             }            
         }
         
@@ -176,13 +143,26 @@
             }
             
             else {
+                $DEFAULT_CPP = "\n#include <iostream>\n#include \"main.hpp\"\n\nint main (void) {\n    std::cout << \"Hello world\" << endl;\n    return 0;\n}\n";
                 $this->save_file($this->username . "/" . $name . ".cpp", $DEFAULT_CPP);
             }            
         }
         
-        private function save_file($filename, $data) {
-            $saved_data = json_encode($data);
-            $options = array('body' => $saved_data);
+        function create_c_source($name) {
+            $exists = $this->s3->if_bucket_exists(strtolower($this->project));
+            if (!$exists) {
+                echo "Error: could not find bucket\n";
+                return false;
+            }
+            
+            else {
+                $DEFAULT_C = "\n#include <stdio.h>\n#include \"main.h\"\n\nint main(void) {\n    printf(\"Hello World\\n\");\n    return 0;\n}\n";
+                $this->save_file($this->username . "/" . $name . ".c", $DEFAULT_C);
+            }            
+        }
+        
+        function save_file($filename, $data) {
+            $options = array('body' => $data);
             $this->s3->create_object($this->project, $filename, $options);
         }
         

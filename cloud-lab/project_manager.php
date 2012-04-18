@@ -9,7 +9,7 @@
     {
         private $s3;
 
-        function __construct($user) {
+        function __construct() {
             $this->s3 = new AmazonS3();
         }
         
@@ -18,11 +18,10 @@
             $response = $this->s3->list_buckets();
             $project_list = array();
             foreach ($response->body->Buckets[0] as $bucket_name) {
-                echo (string) $bucket_name->Name;
-                $project_list[] = bucket_name->Name;
+                echo (string) $bucket_name->Name . PHP_EOL;
+                $project_list[] = $bucket_name->Name;
             }
-            
-            return project_list;
+            return $project_list;
         }
         
         function create_bb_project($project_name) {
@@ -57,7 +56,7 @@
             if ($bucket) {
                 $fm = new FileManager("default", $bucket);
                 $fm->create_cpp_source("main");
-                $fm->create_h_source("main");
+                $fm->create_hpp_source("main");
                 return true;
             }
             else {
@@ -78,16 +77,13 @@
                 $create_bucket_response = $this->s3->create_bucket($bucket, AmazonS3::REGION_US_W1);
                 
                 if ($create_bucket_response->isOk()) {
-                    echo "Project " . $project_name . " created\n";
                     $exists = $this->s3->if_bucket_exists($bucket);
-                    echo $this->bucket . PHP_EOL;
                      while (!$exists)
                      {
                         sleep(1);
                         $exists = $this->s3->if_bucket_exists($bucket);
                      }
                     
-                    echo $bucket . " done\n";
                     return $bucket;
                 }
                 

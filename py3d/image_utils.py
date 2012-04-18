@@ -1,7 +1,7 @@
 #
 #  image_utils.py
 #  
-#  Created by Michael Delong, #0636022, for CIS*4800 Assignment 3
+#  Created by Michael Delong, #0636022, for CIS*4800 Assignment 4
 #  This program includes various utilities which are useful when working with 3D models and 
 #  coordinate systems
 #
@@ -11,10 +11,14 @@ import math
 """ Constant RGB color values """
 BLACK  = (0,0,0)
 RED    = (255,0,0)
+BROWN  = (51, 0, 0)
+DRED   = (102,0,0)
 YELLOW = (255,255,0)
-GREY   = (105, 105, 105)
+GREY   = (49, 79, 79)
+NAVY   = (0, 0, 51)
 
 
+""" """
 def distance(P1, P2):
     return math.sqrt((math.pow((P2[0] - P1[0]), 2.0) + math.pow((P2[1] - P1[1]), 2.0) + math.pow((P2[2] - P1[2]), 2.0)))
 
