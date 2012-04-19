@@ -4,7 +4,7 @@
     require_once "project_manager.php";
 
     
-    $pm = new ProjectManager();
+    /*$pm = new ProjectManager();
     
     $pm->create_bb_project("lab1-bb");
     $pm->create_c_project("lab1-c");
@@ -18,5 +18,8 @@
     }
     else {
         echo "pain and suffering\n";
-    }
+    }*/
+    
+    $cm = new CompilationManager("default", "lab1-c");
+    $cm->compile_source();
 ?>

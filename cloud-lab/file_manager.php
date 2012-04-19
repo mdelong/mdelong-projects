@@ -56,6 +56,21 @@
             }
         }
         
+        function get_source_files() {
+            $files   = $this->s3->get_object_list($this->project);
+            $results = array();
+            
+            foreach ($files as $file) {
+                if (startsWith($file, $this->username . "/")) {
+                    $contents = $this->get_file($file);
+                    if ($contents) {
+                        $results[substr($file, strlen($this->username))] = $contents;
+                    }
+                }
+            }
+            return $results;
+        }
+        
         // retrieve file data
         function get_file($filename) {
             $url = $this->s3->get_object_url($this->project, $filename, '5 minutes');
