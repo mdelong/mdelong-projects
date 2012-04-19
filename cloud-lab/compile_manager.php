@@ -12,19 +12,19 @@
             $this->fs = new FileManager($user, $project);
         }
         
-        /*function __destruct() {
-            echo "rm -r " . "~/" . $this->username . "/" . $this->project_name;
-            exec("rm -r " . "~/" . $this->username . "/" . $this->project_name);
-        }*/
+        function __destruct() {
+            echo "rm -r " . "./" . $this->username . "/" . $this->project_name;
+            //exec("rm -r " . "./" . $this->username . "/" . $this->project_name);
+        }
         
-        function compile_C_source() {
+        function compile_c_source() {
             $this->create_compile_dir();
             $source_dir = "./" . $this->username . "/" . $this->project_name;
             exec("gcc " . $source_dir . "/*.c -o " . $source_dir . "/main -Wall -std=c99 2> " . $source_dir . "/compile.txt");
             
             $fh = fopen($source_dir . "/compile.txt", "r");
             if ($fh) {
-                $sz = filesize("./" . $this->username . "/compile.txt");
+                $sz = filesize($source_dir . "/compile.txt");
                 if ($sz > 0) {
                     $results = fread($fh, $sz);
                     fclose($fh);
@@ -41,14 +41,14 @@
             }
         }
         
-        function compile_CPP_source() {
+        function compile_cpp_source() {
             $this->create_compile_dir();
             $source_dir = "./" . $this->username . "/" . $this->project_name;
-            exec("g++ " . $source_dir . "/*.c -o " . $source_dir . "/main 2> " . $source_dir . "/compile.txt");
+            exec("g++ " . $source_dir . "/*.cpp -o " . $source_dir . "/main 2> " . $source_dir . "/compile.txt");
             
             $fh = fopen($source_dir . "/compile.txt", "r");
             if ($fh) {
-                $sz = filesize("./" . $this->username . "/compile.txt");
+                $sz = filesize($source_dir . "/compile.txt");
                 if ($sz > 0) {
                     $results = fread($fh, $sz);
                     fclose($fh);
@@ -56,11 +56,13 @@
                 }
                 
                 else {
+                    echo "filesize of 0\n";
                     return "";
                 }
             }
             
             else {
+		echo "Error: couldn't open compile.txt file\n";
                 return "";
             }
         }
@@ -96,7 +98,7 @@
                 }
             }
             exec($command . " 2> " . $source_dir . "/run.log >> " . $source_dir . "/run.log");
-            $fh = fopen($source_dir . "/run.log");
+            $fh = fopen($source_dir . "/run.log", "r");
             $results = fread($fh, filesize($source_dir . "/run.log"));
             fclose($fh);
             return $results;

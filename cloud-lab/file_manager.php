@@ -158,7 +158,7 @@
             }
             
             else {
-                $DEFAULT_CPP = "\n#include <iostream>\n#include \"main.hpp\"\n\nint main (void) {\n    std::cout << \"Hello world\" << endl;\n    return 0;\n}\n";
+                $DEFAULT_CPP = "\n#include <iostream>\n#include \"main.hpp\"\n\nint main (void) {\n    std::cout << \"Hello world\" << std::endl;\n    return 0;\n}\n";
                 $this->save_file($this->username . "/" . $name . ".cpp", $DEFAULT_CPP);
             }            
         }

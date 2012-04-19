@@ -4,12 +4,12 @@
     require_once "project_manager.php";
 
     
-    /*$pm = new ProjectManager();
+    //$pm = new ProjectManager();
     
-    $pm->create_bb_project("lab1-bb");
+    /*$pm->create_bb_project("lab1-bb");
     $pm->create_c_project("lab1-c");
-    $pm->create_cpp_project("lab1-cpp");
-    $projects = $pm->list_projects();
+    *///$pm->create_cpp_project("lab1-cpp");
+    /*$projects = $pm->list_projects();
     
     $fm = new FileManager("mdelong", "lab1-bb");
     $r = $fm->delete_file("index.html");
@@ -20,6 +20,11 @@
         echo "pain and suffering\n";
     }*/
     
-    $cm = new CompilationManager("default", "lab1-c");
-    $cm->compile_source();
+    /*$cm = new CompilationManager("default", "lab1-c");
+    $cm->compile_c_source();
+    $cm->run_source("");*/
+
+    $cm = new CompilationManager("default", "lab1-cpp");
+    echo $cm->compile_cpp_source() . PHP_EOL;
+    echo $cm->run_source("") . PHP_EOL;
 ?>
